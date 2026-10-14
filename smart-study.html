@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Study Generator Agent</title>
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0b0e17;
+      --surface:  #111520;
+      --surface2: #171d2e;
+      --surface3: #1e2538;
+      --border:   #252c3f;
+      --border2:  #2e3650;
+      --text:     #e8edf5;
+      --muted:    #6b7590;
+      --muted2:   #9099b0;
+      --accent:   #4f8ef7;
+      --accent2:  #7c5cd8;
+      --green:    #22c55e;
+      --orange:   #f59e0b;
+      --red:      #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(11,14,23,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 6px; }
+    .nav-links a {
+      color: var(--muted); font-size: 13px; text-decoration: none;
+      padding: 6px 12px; border-radius: 7px;
+      transition: background .15s, color .15s;
+    }
+    .nav-links a:hover { background: var(--surface3); color: var(--text); }
+    .nav-cta {
+      background: var(--accent); color: #fff !important;
+      font-weight: 600;
+    }
+    .nav-cta:hover { background: #3b7de8 !important; }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 100px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: -160px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 700px;
+      background: radial-gradient(ellipse at center,
+        rgba(79,142,247,0.13) 0%,
+        rgba(124,92,216,0.07) 40%,
+        transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.25;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(79,142,247,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(79,142,247,0.3);
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 5px 14px 5px 10px;
+      border-radius: 99px; margin-bottom: 28px;
+      position: relative;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 900; line-height: 1.15;
+      color: var(--text); margin: 0 auto 20px;
+      max-width: 720px; position: relative;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 17px; color: var(--muted2);
+      max-width: 560px; margin: 0 auto 40px;
+      position: relative;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      font-size: 14px; font-weight: 700;
+      padding: 14px 30px; border-radius: 10px; border: none;
+      cursor: pointer; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 0 0 0 rgba(79,142,247,0.4);
+    }
+    .btn-primary:hover {
+      background: #3b7de8;
+      box-shadow: 0 0 24px rgba(79,142,247,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--surface2); color: var(--muted2);
+      font-size: 14px; font-weight: 600;
+      padding: 14px 30px; border-radius: 10px;
+      border: 1px solid var(--border2); cursor: pointer;
+      transition: all .2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+    /* ── HERO STATS BAR ── */
+    .hero-stats {
+      display: flex; align-items: center; justify-content: center;
+      gap: 32px; flex-wrap: wrap;
+      margin-top: 56px; position: relative;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      max-width: 600px; margin-left: auto; margin-right: auto;
+    }
+    .h-stat { text-align: center; }
+    .h-stat-val { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .h-stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── SECTION ── */
+    .section { padding: 72px 0; }
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::before {
+      content: ''; display: block;
+      width: 18px; height: 2px; background: var(--accent); border-radius: 2px;
+    }
+    .section-title { font-size: 28px; font-weight: 800; color: var(--text); margin-bottom: 8px; letter-spacing: -0.3px; }
+    .section-sub { font-size: 14px; color: var(--muted2); margin-bottom: 40px; }
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 700px) { .features-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) and (min-width: 701px) { .features-grid { grid-template-columns: 1fr 1fr; } }
+
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(79,142,247,0.04) 0%, transparent 60%);
+      opacity: 0; transition: opacity .2s;
+    }
+    .feature-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .feature-card:hover::before { opacity: 1; }
+    .f-icon {
+      width: 42px; height: 42px;
+      background: rgba(79,142,247,0.12);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .f-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .feature-card h3 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
+    .feature-card p  { font-size: 13px; color: var(--muted2); line-height: 1.6; }
+
+    /* ── CHAT SECTION LAYOUT ── */
+    #chat-section {
+      background: var(--bg);
+      padding: 72px 0;
+    }
+    .chat-outer {
+      max-width: 1000px; margin: 0 auto; padding: 0 24px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .chat-outer { grid-template-columns: 1fr; }
+      .chat-sidebar { display: none; }
+    }
+
+    /* SIDEBAR */
+    .chat-sidebar {
+      display: flex; flex-direction: column; gap: 14px;
+      position: sticky; top: 76px;
+    }
+    .sidebar-header {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted); padding: 0 2px;
+    }
+    .sidebar-prompts { display: flex; flex-direction: column; gap: 6px; }
+    .sidebar-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 9px; padding: 10px 14px;
+      font-size: 12px; color: var(--muted2); cursor: pointer;
+      text-align: left; transition: all .15s;
+      display: flex; align-items: flex-start; gap: 10px;
+      line-height: 1.4;
+    }
+    .sidebar-btn .sb-icon {
+      width: 22px; height: 22px; flex-shrink: 0;
+      background: rgba(79,142,247,0.12); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; margin-top: 1px;
+    }
+    .sidebar-btn:hover { background: var(--surface3); border-color: var(--accent); color: var(--text); }
+    .sidebar-section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+    .sidebar-section-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .mode-tab-row { display: flex; flex-direction: column; gap: 4px; }
+    .mode-tab {
+      padding: 8px 12px; border-radius: 7px; font-size: 12px;
+      color: var(--muted2); cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .mode-tab .mt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .mode-tab:hover, .mode-tab.active { background: var(--surface3); color: var(--text); }
+    .mode-tab.active { font-weight: 600; }
+
+    /* CHAT BOX */
+    .chat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .chat-topbar {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .tl-dots { display: flex; gap: 6px; }
+    .chat-dot { width: 11px; height: 11px; border-radius: 50%; }
+    .chat-topbar-center {
+      flex: 1; text-align: center;
+      font-size: 13px; font-weight: 600; color: var(--muted2);
+      margin: 0 8px;
+    }
+    .model-badge {
+      font-size: 11px; font-weight: 600;
+      background: rgba(79,142,247,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 99px; padding: 3px 10px;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      flex-shrink: 0;
+    }
+
+    /* MESSAGES */
+    .chat-messages {
+      height: 440px; overflow-y: auto;
+      padding: 20px; display: flex; flex-direction: column; gap: 18px;
+      scroll-behavior: smooth;
+    }
+    .msg { display: flex; gap: 12px; align-items: flex-start; }
+    .msg.user { flex-direction: row-reverse; }
+    .msg-avatar {
+      flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .msg.agent .msg-avatar { background: linear-gradient(135deg, rgba(79,142,247,0.25), rgba(79,142,247,0.1)); color: var(--accent); border: 1px solid rgba(79,142,247,0.25); }
+    .msg.user  .msg-avatar { background: linear-gradient(135deg, rgba(124,92,216,0.25), rgba(124,92,216,0.1)); color: var(--accent2); border: 1px solid rgba(124,92,216,0.25); }
+    .msg-content { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
+    .msg-name { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+    .msg.user .msg-name { text-align: right; color: var(--accent2); }
+    .msg.agent .msg-name { color: var(--accent); }
+    .msg-bubble {
+      padding: 13px 16px; border-radius: 14px;
+      font-size: 14px; line-height: 1.7; word-break: break-word;
+    }
+    .msg.agent .msg-bubble {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: #c9d6e8; border-top-left-radius: 4px;
+    }
+    .msg.user .msg-bubble {
+      background: linear-gradient(135deg, rgba(79,142,247,0.18), rgba(124,92,216,0.12));
+      border: 1px solid rgba(79,142,247,0.28);
+      color: #dde6f5; border-top-right-radius: 4px;
+    }
+    .msg-bubble strong { color: var(--text); font-weight: 700; }
+    .msg-bubble em { color: var(--muted2); font-style: italic; }
+    .msg-bubble ul, .msg-bubble ol { padding-left: 20px; margin: 8px 0 4px; }
+    .msg-bubble li { margin-bottom: 5px; }
+    .msg-bubble code {
+      background: rgba(255,255,255,0.07); border: 1px solid var(--border2);
+      border-radius: 4px; padding: 1px 6px; font-size: 12.5px;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+    .msg-bubble h3, .msg-bubble h4 { color: var(--text); margin: 12px 0 6px; font-size: 14px; }
+    .msg-bubble blockquote {
+      border-left: 3px solid var(--accent); padding-left: 12px;
+      color: var(--muted2); margin: 8px 0;
+    }
+
+    /* TYPING */
+    .typing-dots { display: flex; gap: 5px; padding: 4px 0; }
+    .typing-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); opacity: 0.4;
+      animation: tdot 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes tdot {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+      40% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* QUICK PROMPTS */
+    .quick-prompts {
+      padding: 10px 18px;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 7px; flex-wrap: wrap;
+    }
+    .qp-btn {
+      background: rgba(79,142,247,0.07);
+      border: 1px solid rgba(79,142,247,0.22);
+      color: var(--accent); font-size: 11.5px;
+      padding: 5px 12px; border-radius: 99px;
+      cursor: pointer; transition: all .15s; white-space: nowrap;
+      font-weight: 500;
+    }
+    .qp-btn:hover { background: rgba(79,142,247,0.2); border-color: var(--accent); }
+
+    /* INPUT ROW */
+    .chat-input-row {
+      display: flex; gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      align-items: flex-end;
+      background: var(--surface2);
+    }
+    .chat-input-row textarea {
+      flex: 1;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 11px; padding: 11px 14px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      resize: none; outline: none;
+      min-height: 44px; max-height: 140px;
+      line-height: 1.55; transition: border-color .2s;
+    }
+    .chat-input-row textarea::placeholder { color: var(--muted); }
+    .chat-input-row textarea:focus { border-color: var(--accent); }
+    .input-actions { display: flex; gap: 8px; align-items: flex-end; }
+    .send-btn {
+      background: var(--accent); border: none; border-radius: 11px;
+      width: 44px; height: 44px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .2s;
+    }
+    .send-btn:hover { background: #3b7de8; box-shadow: 0 0 16px rgba(79,142,247,0.4); transform: scale(1.05); }
+    .send-btn:disabled { background: var(--border); cursor: not-allowed; box-shadow: none; transform: none; }
+    .send-btn svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.2; }
+    .clear-btn {
+      background: transparent; border: 1px solid var(--border2);
+      border-radius: 11px; width: 44px; height: 44px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .2s;
+    }
+    .clear-btn:hover { border-color: var(--red); }
+    .clear-btn svg { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+    .clear-btn:hover svg { stroke: var(--red); }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; left: 17px; top: 36px;
+      width: 2px; bottom: 36px;
+      background: linear-gradient(to bottom, var(--accent), var(--border));
+      opacity: 0.4;
+    }
+    .step { display: flex; gap: 22px; padding: 22px 0; }
+    .step:last-child { padding-bottom: 0; }
+    .step-num {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+      background: var(--surface3);
+      border: 2px solid var(--accent);
+      color: var(--accent); font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+    }
+    .step-body { padding-top: 6px; }
+    .step-body h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+    .step-body p  { font-size: 13px; color: var(--muted2); }
+
+    /* ── MODES ── */
+    .modes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .modes-grid { grid-template-columns: 1fr; } }
+    .mode-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 22px;
+      border-left: 3px solid; transition: transform .2s, box-shadow .2s;
+    }
+    .mode-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.25); }
+    .mode-card-tag {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 99px; margin-bottom: 10px;
+    }
+    .mode-card h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .mode-card p  { font-size: 13px; color: var(--muted2); }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 52px 24px;
+    }
+    .stats-grid {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 24px; text-align: center;
+    }
+    @media (max-width: 560px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-item { padding: 20px; border-radius: 14px; background: var(--surface2); border: 1px solid var(--border); }
+    .stat-val { font-size: 42px; font-weight: 900; line-height: 1; margin-bottom: 8px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 13px; color: var(--muted2); }
+
+    /* ── TECH PILLS ── */
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 99px; padding: 7px 16px;
+      font-size: 12.5px; color: var(--muted2); font-weight: 500;
+      transition: border-color .15s, color .15s;
+    }
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── CTA ── */
+    .cta-banner {
+      background: linear-gradient(135deg, #111a35 0%, var(--surface) 100%);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 72px 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-banner::before {
+      content: ''; position: absolute;
+      bottom: -80px; right: -80px;
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, rgba(124,92,216,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-banner h2 { font-size: 30px; font-weight: 800; color: var(--text); margin-bottom: 14px; letter-spacing: -0.3px; }
+    .cta-banner p  { font-size: 15px; color: var(--muted2); margin-bottom: 32px; max-width: 460px; margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center; padding: 22px 24px;
+      font-size: 12px; color: var(--muted);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── ERROR ── */
+    .error-bubble {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ff8a8a; border-radius: 10px;
+      padding: 10px 14px; font-size: 13px;
+    }
+
+    /* ── SCROLLBAR SECTION HEADER ── */
+    .scroll-top {
+      position: fixed; bottom: 28px; right: 28px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(79,142,247,0.4);
+      transition: transform .2s; z-index: 999;
+    }
+    .scroll-top:hover { transform: scale(1.1); }
+    .scroll-top svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; }
+  </style>
+</head>
+<body>
+
+  <!-- SCROLL TO TOP -->
+  <button class="scroll-top" id="scrollTop" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">✦</div>
+      <span>Smart</span>Study Agent
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#chat-section">Try Now</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#modes">Modes</a>
+      <a href="#chat-section" class="nav-cta">Start Studying</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grid"></div>
+
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Live · Powered by Gemini AI
+    </div>
+
+    <h1>Your Personal <span class="gradient-text">Smart Study</span><br/>Generator Agent</h1>
+    <p>Ask anything. Generate flashcards, quizzes, summaries, study plans, and mind maps — powered by Google Gemini AI in real time.</p>
+
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('chat-section').scrollIntoView({behavior:'smooth'})">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Start Studying Now
+      </button>
+      <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+        <svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Explore Features
+      </button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="h-stat"><div class="h-stat-val">3×</div><div class="h-stat-lbl">Faster Review</div></div>
+      <div class="h-stat"><div class="h-stat-val">87%</div><div class="h-stat-lbl">Score Improvement</div></div>
+      <div class="h-stat"><div class="h-stat-val">10+</div><div class="h-stat-lbl">Study Formats</div></div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-label">Capabilities</div>
+      <div class="section-title">What the Agent Can Do</div>
+      <div class="section-sub">One AI agent. Every study format you need.</div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3>Flashcard Generator</h3>
+          <p>Paste content and instantly receive formatted Q&amp;A flashcard decks for efficient memorisation.</p>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Quiz Creator</h3>
+          <p>Get MCQs, true/false, and short-answer questions generated from any topic or passage.</p>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3>Smart Summaries</h3>
+          <p>Turn lengthy textbook chapters or articles into concise, structured bullet-point summaries.</p>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3>Study Plan Builder</h3>
+          <p>Describe your exam date and topics — the agent drafts a personalised day-by-day study schedule.</p>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+          <h3>Mind Map Outlines</h3>
+          <p>Get hierarchical concept breakdowns showing relationships between topics and sub-topics.</p>
+        </div>
+        <div class="feature-card">
+          <div class="f-icon">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>Concept Explainer</h3>
+          <p>Ask the agent to explain any concept simply or in depth — like having a personal tutor on demand.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+  <!-- CHAT SECTION -->
+  <section id="chat-section">
+    <div class="chat-outer">
+
+      <!-- SIDEBAR -->
+      <aside class="chat-sidebar">
+        <div class="section-label" style="margin-bottom:4px;">Live AI Agent</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-0.3px;">Study Chat</div>
+        <div style="font-size:13px;color:var(--muted2);margin-bottom:18px;">Ask anything. Get results instantly.</div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Quick Prompts</div>
+          <div class="sidebar-prompts">
+            <button class="sidebar-btn" onclick="sendQuick('Generate 5 flashcards on Photosynthesis')">
+              <span class="sb-icon">🃏</span>Flashcards: Photosynthesis
+            </button>
+            <button class="sidebar-btn" onclick="sendQuick('Create a 5-question MCQ quiz on World War 2')">
+              <span class="sb-icon">📝</span>Quiz: World War 2
+            </button>
+            <button class="sidebar-btn" onclick="sendQuick('Summarize the concept of Machine Learning in simple bullet points')">
+              <span class="sb-icon">📋</span>Summary: Machine Learning
+            </button>
+            <button class="sidebar-btn" onclick="sendQuick('Create a 7-day study plan for a Mathematics exam')">
+              <span class="sb-icon">📅</span>Study Plan: Math Exam
+            </button>
+            <button class="sidebar-btn" onclick="sendQuick('Create a mind map for the topic: Human Digestive System')">
+              <span class="sb-icon">🗺️</span>Mind Map: Digestive System
+            </button>
+            <button class="sidebar-btn" onclick="sendQuick('Explain the concept of Quantum Entanglement simply')">
+              <span class="sb-icon">⚛️</span>Explain: Quantum Physics
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Study Mode</div>
+          <div class="mode-tab-row">
+            <div class="mode-tab active" onclick="setMode(this,'Explore Mode')">
+              <span class="mt-dot" style="background:#4f8ef7;"></span>Explore Mode
+            </div>
+            <div class="mode-tab" onclick="setMode(this,'Deep Dive Mode')">
+              <span class="mt-dot" style="background:#7c5cd8;"></span>Deep Dive Mode
+            </div>
+            <div class="mode-tab" onclick="setMode(this,'Revision Mode')">
+              <span class="mt-dot" style="background:#22c55e;"></span>Revision Mode
+            </div>
+            <div class="mode-tab" onclick="setMode(this,'Exam Simulation Mode')">
+              <span class="mt-dot" style="background:#f59e0b;"></span>Exam Simulation
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CHAT BOX -->
+      <div class="chat-box">
+        <div class="chat-topbar">
+          <div class="tl-dots">
+            <div class="chat-dot" style="background:#ff5f57;"></div>
+            <div class="chat-dot" style="background:#febc2e;"></div>
+            <div class="chat-dot" style="background:#28c840;"></div>
+          </div>
+          <div class="chat-topbar-center">Smart Study Agent</div>
+          <div class="status-dot"></div>
+          <div class="model-badge">gemini-3.5-flash-lite</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg agent">
+            <div class="msg-avatar">AI</div>
+            <div class="msg-content">
+              <div class="msg-name">Study Agent</div>
+              <div class="msg-bubble">
+                <strong>Hello! I'm your Smart Study Agent.</strong><br/><br/>
+                I can help you with:<br/>
+                • <strong>Flashcards</strong> — paste any content<br/>
+                • <strong>Quizzes</strong> — MCQs, true/false, short answer<br/>
+                • <strong>Summaries</strong> — concise notes from long text<br/>
+                • <strong>Study Plans</strong> — give me your exam date<br/>
+                • <strong>Mind Maps</strong> — concept breakdowns<br/>
+                • <strong>Explanations</strong> — any topic, any depth<br/><br/>
+                What would you like to study today?
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-prompts">
+          <button class="qp-btn" onclick="sendQuick('Generate 5 flashcards on Photosynthesis')">🃏 Flashcards</button>
+          <button class="qp-btn" onclick="sendQuick('Create a 5-question MCQ quiz on World War 2')">📝 Quiz</button>
+          <button class="qp-btn" onclick="sendQuick('Summarize Machine Learning in bullet points')">📋 Summary</button>
+          <button class="qp-btn" onclick="sendQuick('Create a 7-day study plan for a Math exam')">📅 Study Plan</button>
+          <button class="qp-btn" onclick="sendQuick('Create a mind map for the Human Digestive System')">🗺️ Mind Map</button>
+        </div>
+
+        <div class="chat-input-row">
+          <textarea id="userInput"
+            placeholder="Ask your study agent… e.g. Generate flashcards on Newton's Laws"
+            rows="1"
+            oninput="autoResize(this)"
+            onkeydown="handleKey(event)"></textarea>
+          <div class="input-actions">
+            <button class="clear-btn" onclick="clearChat()" title="Clear chat">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" style="margin-top:60px;"/>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-label">Process</div>
+      <div class="section-title">How It Works</div>
+      <div class="section-sub">From raw input to personalised study materials in seconds.</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Input Your Topic or Content</h3>
+            <p>Type a subject, paste text, or ask a specific study question in the chat interface.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Gemini AI Processes &amp; Understands</h3>
+            <p>Google's Gemini model analyses your input, identifies key concepts, and understands the study context.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Study Materials Generated</h3>
+            <p>Flashcards, quizzes, summaries, or plans are generated and delivered back to you instantly.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Ask Follow-ups &amp; Iterate</h3>
+            <p>Continue the conversation — ask for more detail, harder questions, or a different format anytime.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+  <!-- MODES -->
+  <section class="section" id="modes">
+    <div class="container">
+      <div class="section-label">Study Modes</div>
+      <div class="section-title">Tailored Learning Experiences</div>
+      <div class="section-sub">Tell the agent which mode you want, or just describe your goal.</div>
+      <div class="modes-grid">
+        <div class="mode-card" style="border-left-color:#4f8ef7;">
+          <div class="mode-card-tag" style="background:rgba(79,142,247,0.12);color:#4f8ef7;">Beginner</div>
+          <h4>Explore Mode</h4>
+          <p>First-time introduction to a topic — background, definitions, and key concepts explained clearly.</p>
+        </div>
+        <div class="mode-card" style="border-left-color:#7c5cd8;">
+          <div class="mode-card-tag" style="background:rgba(124,92,216,0.12);color:#7c5cd8;">Advanced</div>
+          <h4>Deep Dive Mode</h4>
+          <p>In-depth notes, worked examples, and thorough explanations of complex subjects.</p>
+        </div>
+        <div class="mode-card" style="border-left-color:#22c55e;">
+          <div class="mode-card-tag" style="background:rgba(34,197,94,0.12);color:#22c55e;">Pre-Exam</div>
+          <h4>Revision Mode</h4>
+          <p>Flashcards and rapid-fire quizzes using spaced repetition — ideal pre-exam preparation.</p>
+        </div>
+        <div class="mode-card" style="border-left-color:#f59e0b;">
+          <div class="mode-card-tag" style="background:rgba(245,158,11,0.12);color:#f59e0b;">Practice</div>
+          <h4>Exam Simulation Mode</h4>
+          <p>Full timed mock exams with detailed feedback and a topic-by-topic score breakdown.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-val">3×</div>
+        <div class="stat-label">Faster content review vs. manual note-taking</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">87%</div>
+        <div class="stat-label">Users report improved exam scores after 4 weeks</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">10+</div>
+        <div class="stat-label">Study formats from a single prompt</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <section class="section">
+    <div class="container">
+      <div class="section-label">Under the Hood</div>
+      <div class="section-title">Technology Stack</div>
+      <div class="section-sub" style="margin-bottom:20px;">Built on cutting-edge AI and web technologies.</div>
+      <div class="tech-pills">
+        <span class="pill">Google Gemini API</span>
+        <span class="pill">Large Language Models (LLM)</span>
+        <span class="pill">Spaced Repetition Algorithm</span>
+        <span class="pill">NLP / Text Extraction</span>
+        <span class="pill">Retrieval-Augmented Generation</span>
+        <span class="pill">Adaptive Learning Engine</span>
+        <span class="pill">Real-time Generation</span>
+        <span class="pill">REST API</span>
+        <span class="pill">Vector Embeddings</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-banner">
+    <h2>Ready to Study Smarter?</h2>
+    <p>Your personal AI study agent is live — start chatting to generate your first study materials in seconds.</p>
+    <button class="btn-primary" onclick="document.getElementById('chat-section').scrollIntoView({behavior:'smooth'})">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Open Study Agent
+    </button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 Smart Study Generator Agent — Powered by Google Gemini AI</p>
+    <p style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">Made with IBM Bob</p>
+  </footer>
+
+  <script>
+    const API_KEY = "AQ.Ab8RN6KCu4Whs_9LK7jN9Wnwo7lf3Ops5KyMEme-QWA9pPQMiQ";
+    const MODEL   = "gemini-3.5-flash-lite";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+    let conversationHistory = [];
+    let currentMode = 'Explore Mode';
+
+    /* scroll-to-top button */
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('scrollTop');
+      btn.style.display = window.scrollY > 400 ? 'flex' : 'none';
+    });
+
+    function setMode(el, mode) {
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      currentMode = mode;
+    }
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function scrollBottom() {
+      const msgs = document.getElementById('chatMessages');
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function appendMessage(role, text) {
+      const msgs   = document.getElementById('chatMessages');
+      const wrap   = document.createElement('div');
+      wrap.className = `msg ${role}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'msg-avatar';
+      avatar.textContent = role === 'agent' ? 'AI' : 'You';
+
+      const content = document.createElement('div');
+      content.className = 'msg-content';
+
+      const name = document.createElement('div');
+      name.className = 'msg-name';
+      name.textContent = role === 'agent' ? 'Study Agent' : 'You';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = formatText(text);
+
+      content.appendChild(name);
+      content.appendChild(bubble);
+      wrap.appendChild(avatar);
+      wrap.appendChild(content);
+      msgs.appendChild(wrap);
+      scrollBottom();
+      return bubble;
+    }
+
+    function showTyping() {
+      const msgs  = document.getElementById('chatMessages');
+      const wrap  = document.createElement('div');
+      wrap.className = 'msg agent'; wrap.id = 'typingIndicator';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'msg-avatar'; avatar.textContent = 'AI';
+
+      const content = document.createElement('div');
+      content.className = 'msg-content';
+
+      const name = document.createElement('div');
+      name.className = 'msg-name'; name.textContent = 'Study Agent';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+      content.appendChild(name);
+      content.appendChild(bubble);
+      wrap.appendChild(avatar);
+      wrap.appendChild(content);
+      msgs.appendChild(wrap);
+      scrollBottom();
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    function formatText(text) {
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+      text = text.replace(/^#{1,3}\s+(.+)$/gm, '<h4>$1</h4>');
+      text = text.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+      text = text.replace(/(<li>.*?<\/li>(\n|$))+/gs, m => `<ul>${m}</ul>`);
+      text = text.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+      text = text.replace(/\n/g, '<br/>');
+      return text;
+    }
+
+    function setSending(state) {
+      document.getElementById('sendBtn').disabled = state;
+      document.getElementById('userInput').disabled = state;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      input.value = ''; input.style.height = 'auto';
+      appendMessage('user', text);
+      setSending(true); showTyping();
+      conversationHistory.push({ role: 'user', parts: [{ text }] });
+
+      const systemPrompt = `You are a Smart Study Generator Agent — an expert AI tutor and study material creator operating in "${currentMode}".
+Your role is to help students learn effectively by generating:
+- Flashcards (Q&A format, clearly numbered)
+- Multiple-choice quizzes (with answer key)
+- Concise structured summaries (with bullet points)
+- Personalised study plans (day-by-day schedules)
+- Mind map outlines (hierarchical concept trees)
+- Clear, simple concept explanations
+
+Always format your responses clearly with headings, bullet points, and bold key terms.
+Be encouraging, accurate, and pedagogically effective.
+Current mode: ${currentMode}.`;
+
+      const body = {
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: conversationHistory,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+      };
+
+      try {
+        const res  = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        removeTyping();
+
+        if (!res.ok) {
+          const errMsg = data?.error?.message || 'API error. Please try again.';
+          showError(errMsg); conversationHistory.pop();
+        } else {
+          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
+            || 'Sorry, I could not generate a response. Please try again.';
+          appendMessage('agent', reply);
+          conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+        }
+      } catch (err) {
+        removeTyping(); showError('Network error: ' + err.message);
+        conversationHistory.pop();
+      } finally {
+        setSending(false);
+        document.getElementById('userInput').focus();
+      }
+    }
+
+    function showError(msg) {
+      const msgs = document.getElementById('chatMessages');
+      const err  = document.createElement('div');
+      err.className = 'error-bubble';
+      err.textContent = '⚠ ' + msg;
+      msgs.appendChild(err); scrollBottom();
+    }
+
+    function sendQuick(text) {
+      document.getElementById('userInput').value = text;
+      document.getElementById('chat-section').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => sendMessage(), 300);
+    }
+
+    function clearChat() {
+      conversationHistory = [];
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="msg agent">
+          <div class="msg-avatar">AI</div>
+          <div class="msg-content">
+            <div class="msg-name">Study Agent</div>
+            <div class="msg-bubble">
+              <strong>Chat cleared!</strong><br/><br/>
+              I'm ready to help you study again. What topic would you like to work on?
+            </div>
+          </div>
+        </div>`;
+    }
+  </script>
+
+</body>
+</html>
